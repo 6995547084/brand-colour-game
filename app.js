@@ -4,8 +4,8 @@
   2. Upload index.html, styles.css, app.js, rounds.js and the rounds folder.
 */
 
-const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
-const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+const SUPABASE_URL = "https://tfkecqghkkceubdmzted.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Y1la5yVRPmcQEvMMOTz_Ug_U3aJmjM3";
 
 const ROUNDS = window.COLOUR_GAME_ROUNDS || [];
 const DEFAULT_COLOUR = { r: 128, g: 128, b: 128 };
