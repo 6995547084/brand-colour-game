@@ -199,7 +199,7 @@ function adminStatusMarkup(game, currentRound, currentRoundGuesses) {
       </div>
       <div class="game-split mt-6">
         <section class="game-split-panel">
-          <div class="image-stage" style="min-height:420px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff">
+          <div class="image-stage" style="min-height:420px;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--panel)">
             <div class="image-colour-layer" style="background:rgb(220,220,220)">
               <img src="${currentRound.image}" alt="" style="max-height:340px;max-width:100%;object-fit:contain" />
             </div>
@@ -314,7 +314,7 @@ async function renderPlayer() {
             </div>
             <div class="game-split">
               <section class="game-split-panel">
-                <div class="image-stage" style="height:100%;min-height:620px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff">
+                <div class="image-stage" style="height:100%;min-height:620px;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--panel)">
                   <div class="image-colour-layer" id="live-image" style="background:${rgbToCss(appState.selectedColour)}">
                     <img src="${currentRound.image}" alt="" style="max-height:520px;max-width:100%;object-fit:contain" />
                   </div>
@@ -349,13 +349,13 @@ async function renderPlayer() {
               <section class="game-split-panel">
                 <div class="game-card">
                   <div class="game-window-header">Correct colour</div>
-                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff"><div class="image-colour-layer" style="background:${rgbToCss(currentRound.correctRgb)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div></div>
+                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--panel)"><div class="image-colour-layer" style="background:${rgbToCss(currentRound.correctRgb)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div></div>
                 </div>
               </section>
               <section class="game-split-panel">
                 <div class="game-card">
                   <div class="game-window-header">Your colour</div>
-                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff"><div class="image-colour-layer" style="background:${rgbToCss(userColour)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div></div>
+                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--panel)"><div class="image-colour-layer" style="background:${rgbToCss(userColour)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div></div>
                 </div>
               </section>
             </div>
@@ -420,11 +420,11 @@ function playersMarkup(players) {
 
 function playerListRows(players) {
   return players.map((p) => `
-    <div class="row" style="background:#fffdf0;padding:1rem;border-radius:1rem;box-shadow:0 4px 0 rgba(84,62,105,.18)">
+    <div class="row" style="background:var(--panel)df0;padding:1rem;border-radius:1rem;box-shadow:0 4px 0 rgba(84,62,105,.18)">
       <span class="font-black">${escapeHtml(p.name)}</span>
       <span class="${p.is_ready ? "ready-chip" : "waiting-chip"}">${p.is_ready ? "Ready" : "Waiting"}</span>
     </div>
-  `).join("") || `<div class="text-center font-black" style="background:#fffdf0;padding:1rem;border-radius:1rem">No players yet.</div>`;
+  `).join("") || `<div class="text-center font-black" style="background:var(--panel)df0;padding:1rem;border-radius:1rem">No players yet.</div>`;
 }
 
 async function createGame() {
@@ -635,13 +635,15 @@ function bindColourPicker() {
     document.body.classList.remove("is-dragging-colour");
   });
 
-  slider.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
+  slider.addEventListener("pointerdown", () => {
     document.body.classList.add("is-dragging-colour");
   });
 
   slider.addEventListener("pointerup", () => {
+    document.body.classList.remove("is-dragging-colour");
+  });
+
+  slider.addEventListener("pointercancel", () => {
     document.body.classList.remove("is-dragging-colour");
   });
 
@@ -678,7 +680,11 @@ function getRemainingSeconds(startedAt) {
 
 function calculateScore(correct, guess) {
   const distance = Math.sqrt((correct.r - guess.r) ** 2 + (correct.g - guess.g) ** 2 + (correct.b - guess.b) ** 2);
-  return Math.max(0, Math.min(100, Math.round((1 - distance / MAX_RGB_DISTANCE) * 100)));
+  const closeness = Math.max(0, 1 - distance / MAX_RGB_DISTANCE);
+
+  // More punishing than a straight linear score:
+  // close guesses still score well, clearly wrong colours drop much faster.
+  return Math.max(0, Math.min(100, Math.round(Math.pow(closeness, 2.2) * 100)));
 }
 
 function rgbToCss(rgb) { return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`; }

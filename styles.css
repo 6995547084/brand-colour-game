@@ -92,7 +92,7 @@ button:disabled { cursor: not-allowed; filter: grayscale(.6); opacity: .55; }
 .game-timer-label { display: block; font-size: .7rem; font-weight: 1000; text-transform: uppercase; opacity: .9; }
 .game-timer-value { display: block; margin-top: .1rem; font-size: 2.2rem; line-height: 1; font-weight: 1000; }
 
-.image-stage { position: relative; overflow: hidden; border-radius: 1.7rem; border: 6px solid #fff; background: #fff; box-shadow: inset 0 2px 0 rgba(255,255,255,.55), 0 8px 0 rgba(84,62,105,.3), 0 20px 32px rgba(43,23,73,.18); }
+.image-stage { position: relative; overflow: hidden; border-radius: 1.7rem; border: 6px solid #fff; background: var(--panel); box-shadow: inset 0 2px 0 rgba(255,255,255,.55), 0 8px 0 rgba(84,62,105,.3), 0 20px 32px rgba(43,23,73,.18); }
 .image-colour-layer { display: inline-flex; align-items: center; justify-content: center; width: fit-content; max-width: 100%; line-height: 0; }
 .image-colour-layer img { display: block; position: relative; z-index: 1; }
 .image-stage img { position: relative; z-index: 1; }
@@ -104,8 +104,7 @@ button:disabled { cursor: not-allowed; filter: grayscale(.6); opacity: .55; }
 .colour-picker-panel,
 .colour-picker-panel *,
 .colour-picker-square,
-.colour-picker-square *,
-.hue-slider {
+.colour-picker-square * {
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
@@ -118,7 +117,7 @@ body.is-dragging-colour {
   cursor: crosshair;
 }
 .colour-preview { width: 80px; height: 80px; flex-shrink: 0; border-radius: 999px; border: 6px solid #fff; box-shadow: 0 8px 18px rgba(43,23,73,.25); }
-.hue-slider { appearance: none; width: 100%; height: 22px; border-radius: 999px; outline: none; border: 4px solid white; box-shadow: 0 4px 0 rgba(84,62,105,.25), 0 8px 16px rgba(43,23,73,.18); background: linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
+.hue-slider { user-select: none; -webkit-user-select: none; touch-action: pan-x; appearance: none; width: 100%; height: 22px; border-radius: 999px; outline: none; border: 4px solid white; box-shadow: 0 4px 0 rgba(84,62,105,.25), 0 8px 16px rgba(43,23,73,.18); background: linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
 .hue-slider::-webkit-slider-thumb { appearance: none; height: 34px; width: 34px; border-radius: 999px; background: white; border: 5px solid #2b1749; box-shadow: 0 4px 10px rgba(43,23,73,.35); }
 .hue-slider::-moz-range-thumb { height: 34px; width: 34px; border-radius: 999px; background: white; border: 5px solid #2b1749; box-shadow: 0 4px 10px rgba(43,23,73,.35); }
 
