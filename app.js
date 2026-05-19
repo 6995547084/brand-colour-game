@@ -4,8 +4,8 @@
   2. Upload index.html, styles.css, app.js, rounds.js and the rounds folder.
 */
 
-const SUPABASE_URL = "https://tfkecqghkkceubdmzted.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_Y1la5yVRPmcQEvMMOTz_Ug_U3aJmjM3";
+const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
+const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
 
 const ROUNDS = window.COLOUR_GAME_ROUNDS || [];
 const DEFAULT_COLOUR = { r: 128, g: 128, b: 128 };
@@ -199,8 +199,10 @@ function adminStatusMarkup(game, currentRound, currentRoundGuesses) {
       </div>
       <div class="game-split mt-6">
         <section class="game-split-panel">
-          <div class="image-stage" style="min-height:420px;display:flex;align-items:center;justify-content:center;padding:2rem;background:rgb(220,220,220)">
-            <img src="${currentRound.image}" alt="" style="max-height:340px;max-width:100%;object-fit:contain" />
+          <div class="image-stage" style="min-height:420px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff">
+            <div class="image-colour-layer" style="background:rgb(220,220,220)">
+              <img src="${currentRound.image}" alt="" style="max-height:340px;max-width:100%;object-fit:contain" />
+            </div>
           </div>
         </section>
         <section class="game-split-panel">
@@ -312,8 +314,10 @@ async function renderPlayer() {
             </div>
             <div class="game-split">
               <section class="game-split-panel">
-                <div class="image-stage" id="live-image" style="height:100%;min-height:620px;display:flex;align-items:center;justify-content:center;padding:2rem;background:${rgbToCss(appState.selectedColour)}">
-                  <img src="${currentRound.image}" alt="" style="max-height:520px;max-width:100%;object-fit:contain" />
+                <div class="image-stage" style="height:100%;min-height:620px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff">
+                  <div class="image-colour-layer" id="live-image" style="background:${rgbToCss(appState.selectedColour)}">
+                    <img src="${currentRound.image}" alt="" style="max-height:520px;max-width:100%;object-fit:contain" />
+                  </div>
                 </div>
               </section>
               <section class="game-split-panel">${colourPickerMarkup(appState.selectedColour)}</section>
@@ -345,13 +349,13 @@ async function renderPlayer() {
               <section class="game-split-panel">
                 <div class="game-card">
                   <div class="game-window-header">Correct colour</div>
-                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:${rgbToCss(currentRound.correctRgb)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div>
+                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff"><div class="image-colour-layer" style="background:${rgbToCss(currentRound.correctRgb)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div></div>
                 </div>
               </section>
               <section class="game-split-panel">
                 <div class="game-card">
                   <div class="game-window-header">Your colour</div>
-                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:${rgbToCss(userColour)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div>
+                  <div class="game-card-inner"><div class="image-stage" style="min-height:520px;display:flex;align-items:center;justify-content:center;padding:2rem;background:#fff"><div class="image-colour-layer" style="background:${rgbToCss(userColour)}"><img src="${currentRound.image}" alt="" style="max-height:450px;max-width:100%;object-fit:contain" /></div></div></div>
                 </div>
               </section>
             </div>
