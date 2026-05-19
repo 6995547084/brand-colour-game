@@ -24,6 +24,10 @@ let appState = {
   timer: null,
   adminTimer: null,
   endingRound: false,
+  isPickingColour: false,
+  saveGuessTimer: null,
+  pendingGuess: null,
+  isSavingGuess: false,
 };
 
 const app = document.getElementById("app");
@@ -534,7 +538,15 @@ async function subscribeToGame(gameId) {
   appState.channel = supabaseClient.channel(`colour-game-${gameId}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "games", filter: `id=eq.${gameId}` }, async () => { await loadGameData(gameId); render(); })
     .on("postgres_changes", { event: "*", schema: "public", table: "players", filter: `game_id=eq.${gameId}` }, async () => { await loadGameData(gameId); render(); })
-    .on("postgres_changes", { event: "*", schema: "public", table: "guesses", filter: `game_id=eq.${gameId}` }, async () => { await loadGameData(gameId); render(); })
+    .on("postgres_changes", { event: "*", schema: "public", table: "guesses", filter: `game_id=eq.${gameId}` }, async () => {
+      await loadGameData(gameId);
+
+      // Do not re-render the player game screen while they are dragging/picking.
+      // Re-rendering replaces the picker DOM and causes cursor jumps/image flicker.
+      if (appState.view === "player" && appState.game?.status === "round_active") return;
+
+      render();
+    })
     .subscribe((status) => console.log("Realtime:", status));
 }
 
@@ -572,7 +584,7 @@ function bindColourPicker() {
   const slider = document.getElementById("hue-slider");
   if (!square || !slider) return;
 
-  let isPickingColour = false;
+  let frame = null;
 
   const updatePointer = (event) => {
     const rect = square.getBoundingClientRect();
@@ -580,13 +592,16 @@ function bindColourPicker() {
     const y = clamp(event.clientY - rect.top, 0, rect.height);
     const hsv = rgbToHsv(appState.selectedColour);
     const next = hsvToRgb({ h: hsv.h, s: x / rect.width, v: 1 - y / rect.height });
-    setSelectedColour(next);
+
+    // Keep DOM movement smooth even if pointer events fire very quickly.
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => setSelectedColour(next));
   };
 
   const startColourPick = (event) => {
     if (!appState.player || !appState.game || appState.game.status !== "round_active") return;
 
-    isPickingColour = true;
+    appState.isPickingColour = true;
     document.body.classList.add("is-dragging-colour");
 
     event.preventDefault();
@@ -597,7 +612,7 @@ function bindColourPicker() {
   };
 
   const moveColourPick = (event) => {
-    if (!isPickingColour) return;
+    if (!appState.isPickingColour) return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -606,9 +621,9 @@ function bindColourPicker() {
   };
 
   const endColourPick = (event) => {
-    if (!isPickingColour) return;
+    if (!appState.isPickingColour) return;
 
-    isPickingColour = false;
+    appState.isPickingColour = false;
     document.body.classList.remove("is-dragging-colour");
 
     event.preventDefault();
@@ -617,6 +632,8 @@ function bindColourPicker() {
     if (event.pointerId !== undefined) {
       square.releasePointerCapture?.(event.pointerId);
     }
+
+    flushPendingGuess();
   };
 
   square.addEventListener("pointerdown", startColourPick);
@@ -626,25 +643,32 @@ function bindColourPicker() {
   square.addEventListener("lostpointercapture", endColourPick);
 
   window.addEventListener("pointerup", () => {
-    isPickingColour = false;
+    if (appState.isPickingColour) flushPendingGuess();
+    appState.isPickingColour = false;
     document.body.classList.remove("is-dragging-colour");
   });
 
   window.addEventListener("blur", () => {
-    isPickingColour = false;
+    if (appState.isPickingColour) flushPendingGuess();
+    appState.isPickingColour = false;
     document.body.classList.remove("is-dragging-colour");
   });
 
   slider.addEventListener("pointerdown", () => {
+    appState.isPickingColour = true;
     document.body.classList.add("is-dragging-colour");
   });
 
   slider.addEventListener("pointerup", () => {
+    appState.isPickingColour = false;
     document.body.classList.remove("is-dragging-colour");
+    flushPendingGuess();
   });
 
   slider.addEventListener("pointercancel", () => {
+    appState.isPickingColour = false;
     document.body.classList.remove("is-dragging-colour");
+    flushPendingGuess();
   });
 
   slider.addEventListener("input", (event) => {
@@ -653,7 +677,7 @@ function bindColourPicker() {
   });
 }
 
-async function setSelectedColour(rgb) {
+function setSelectedColour(rgb) {
   appState.selectedColour = rgb;
   const liveImage = document.getElementById("live-image");
   const preview = document.getElementById("colour-preview");
@@ -666,10 +690,42 @@ async function setSelectedColour(rgb) {
   if (preview) preview.style.background = rgbToCss(rgb);
   if (cursor) { cursor.style.background = rgbToCss(rgb); cursor.style.left = `${hsv.s * 100}%`; cursor.style.top = `${(1 - hsv.v) * 100}%`; }
   if (square) square.style.backgroundColor = `hsl(${hsv.h},100%,50%)`;
-  if (slider) slider.value = Math.round(hsv.h);
+  if (slider && document.activeElement !== slider) slider.value = Math.round(hsv.h);
 
-  if (appState.game?.status === "round_active" && appState.player) {
-    await supabaseClient.from("guesses").upsert({ game_id: appState.game.id, player_id: appState.player.id, round_number: appState.game.current_round, r: rgb.r, g: rgb.g, b: rgb.b }, { onConflict: "player_id,round_number" });
+  scheduleGuessSave(rgb);
+}
+
+function scheduleGuessSave(rgb) {
+  if (appState.game?.status !== "round_active" || !appState.player) return;
+
+  appState.pendingGuess = rgb;
+  clearTimeout(appState.saveGuessTimer);
+  appState.saveGuessTimer = setTimeout(flushPendingGuess, 140);
+}
+
+async function flushPendingGuess() {
+  if (!appState.pendingGuess || appState.isSavingGuess) return;
+  if (appState.game?.status !== "round_active" || !appState.player) return;
+
+  const rgb = appState.pendingGuess;
+  appState.pendingGuess = null;
+  appState.isSavingGuess = true;
+
+  const game = appState.game;
+  const player = appState.player;
+
+  try {
+    await supabaseClient.from("guesses").upsert({
+      game_id: game.id,
+      player_id: player.id,
+      round_number: game.current_round,
+      r: rgb.r,
+      g: rgb.g,
+      b: rgb.b,
+    }, { onConflict: "player_id,round_number" });
+  } finally {
+    appState.isSavingGuess = false;
+    if (appState.pendingGuess) flushPendingGuess();
   }
 }
 

@@ -93,13 +93,13 @@ button:disabled { cursor: not-allowed; filter: grayscale(.6); opacity: .55; }
 .game-timer-value { display: block; margin-top: .1rem; font-size: 2.2rem; line-height: 1; font-weight: 1000; }
 
 .image-stage { position: relative; overflow: hidden; border-radius: 1.7rem; border: 6px solid #fff; background: var(--panel); box-shadow: inset 0 2px 0 rgba(255,255,255,.55), 0 8px 0 rgba(84,62,105,.3), 0 20px 32px rgba(43,23,73,.18); }
-.image-colour-layer { display: inline-flex; align-items: center; justify-content: center; width: fit-content; max-width: 100%; line-height: 0; }
-.image-colour-layer img { display: block; position: relative; z-index: 1; }
+.image-colour-layer { display: inline-flex; align-items: center; justify-content: center; width: fit-content; max-width: 100%; line-height: 0; will-change: background-color; contain: paint; transform: translateZ(0); }
+.image-colour-layer img { display: block; position: relative; z-index: 1; pointer-events: none; user-select: none; -webkit-user-drag: none; }
 .image-stage img { position: relative; z-index: 1; }
 
 .colour-picker-panel { height: 100%; min-height: 620px; border-radius: 1.5rem; background: #fff7c9; display: flex; flex-direction: column; padding: 1.25rem; }
-.colour-picker-square { position: relative; min-height: 440px; flex: 1; overflow: hidden; border-radius: 1.4rem; border: 6px solid #fff; box-shadow: inset 0 4px 18px rgba(0,0,0,.22); cursor: crosshair; touch-action: none; }
-.colour-picker-cursor { position: absolute; width: 36px; height: 36px; transform: translate(-50%,-50%); border-radius: 999px; border: 5px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.45); }
+.colour-picker-square { position: relative; min-height: 440px; flex: 1; overflow: hidden; border-radius: 1.4rem; border: 6px solid #fff; box-shadow: inset 0 4px 18px rgba(0,0,0,.22); cursor: crosshair; touch-action: none; will-change: background-color; contain: paint; }
+.colour-picker-cursor { position: absolute; width: 36px; height: 36px; transform: translate(-50%,-50%); border-radius: 999px; border: 5px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,.45); pointer-events: none; will-change: left, top, background-color; }
 
 .colour-picker-panel,
 .colour-picker-panel *,
@@ -115,6 +115,11 @@ body.is-dragging-colour {
   user-select: none;
   -webkit-user-select: none;
   cursor: crosshair;
+}
+
+body.is-dragging-colour * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 .colour-preview { width: 80px; height: 80px; flex-shrink: 0; border-radius: 999px; border: 6px solid #fff; box-shadow: 0 8px 18px rgba(43,23,73,.25); }
 .hue-slider { user-select: none; -webkit-user-select: none; touch-action: pan-x; appearance: none; width: 100%; height: 22px; border-radius: 999px; outline: none; border: 4px solid white; box-shadow: 0 4px 0 rgba(84,62,105,.25), 0 8px 16px rgba(43,23,73,.18); background: linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
