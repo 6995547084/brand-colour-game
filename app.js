@@ -571,7 +571,8 @@ function bindColourPicker() {
   const square = document.getElementById("colour-square");
   const slider = document.getElementById("hue-slider");
   if (!square || !slider) return;
-  let dragging = false;
+
+  let isPickingColour = false;
 
   const updatePointer = (event) => {
     const rect = square.getBoundingClientRect();
@@ -582,9 +583,68 @@ function bindColourPicker() {
     setSelectedColour(next);
   };
 
-  square.addEventListener("pointerdown", (event) => { dragging = true; square.setPointerCapture(event.pointerId); updatePointer(event); });
-  square.addEventListener("pointermove", (event) => { if (dragging) updatePointer(event); });
-  square.addEventListener("pointerup", () => { dragging = false; });
+  const startColourPick = (event) => {
+    if (!appState.player || !appState.game || appState.game.status !== "round_active") return;
+
+    isPickingColour = true;
+    document.body.classList.add("is-dragging-colour");
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    square.setPointerCapture?.(event.pointerId);
+    updatePointer(event);
+  };
+
+  const moveColourPick = (event) => {
+    if (!isPickingColour) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    updatePointer(event);
+  };
+
+  const endColourPick = (event) => {
+    if (!isPickingColour) return;
+
+    isPickingColour = false;
+    document.body.classList.remove("is-dragging-colour");
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.pointerId !== undefined) {
+      square.releasePointerCapture?.(event.pointerId);
+    }
+  };
+
+  square.addEventListener("pointerdown", startColourPick);
+  square.addEventListener("pointermove", moveColourPick);
+  square.addEventListener("pointerup", endColourPick);
+  square.addEventListener("pointercancel", endColourPick);
+  square.addEventListener("lostpointercapture", endColourPick);
+
+  window.addEventListener("pointerup", () => {
+    isPickingColour = false;
+    document.body.classList.remove("is-dragging-colour");
+  });
+
+  window.addEventListener("blur", () => {
+    isPickingColour = false;
+    document.body.classList.remove("is-dragging-colour");
+  });
+
+  slider.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    document.body.classList.add("is-dragging-colour");
+  });
+
+  slider.addEventListener("pointerup", () => {
+    document.body.classList.remove("is-dragging-colour");
+  });
+
   slider.addEventListener("input", (event) => {
     const hsv = rgbToHsv(appState.selectedColour);
     setSelectedColour(hsvToRgb({ h: Number(event.target.value), s: hsv.s, v: hsv.v }));
